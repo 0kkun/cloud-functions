@@ -7,3 +7,9 @@ typings/
 
 # Node.js dependency directory
 node_modules/
+
+.runtimeconfig.json
+
+src/credentials.json
+
+.DS_Store
