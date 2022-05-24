@@ -13,3 +13,5 @@ node_modules/
 src/credentials.json
 
 .DS_Store
+
+keys/firebase-adminsdk-key
