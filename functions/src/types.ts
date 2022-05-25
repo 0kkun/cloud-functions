@@ -1,9 +1,3 @@
-export type Config = {
-  scopes: [string],
-  tokenPath: string,
-  auth?: unknown,
-}
-
 export type Credentials = {
   [key:string]: {
     client_id: string,

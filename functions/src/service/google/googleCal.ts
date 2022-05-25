@@ -1,5 +1,5 @@
 /* eslint-disable */
-import {Config, Credentials} from '../../types';
+import {Credentials} from '../../types';
 import * as functions from 'firebase-functions';
 import {google} from 'googleapis';
 
@@ -11,11 +11,10 @@ import {google} from 'googleapis';
  * 3. 受け取ったコードを使ってアクセストークンとリフレッシュトークンを発行
  */
 export default class GoogleCal {
+  private accessCode: string;
 
-  private code: string;
-
-  constructor(code: string){
-    this.code = code;
+  constructor(accessCode: string){
+    this.accessCode = accessCode;
   }
 
   /**
@@ -26,14 +25,9 @@ export default class GoogleCal {
     const credentials: Credentials = {
       web: functions.config().googlecredentialsweb,
     };
-    const config: Config = {
-      scopes: ['https://www.googleapis.com/auth/calendar.readonly'],
-      tokenPath: 'access-token.json',
-      auth: {},
-    };
 
     return new Promise((resolve) => {
-      this.authorize(credentials, config).then((auth) => {
+      this.authorize(credentials).then((auth) => {
         resolve(auth);
       });
     });
@@ -42,15 +36,14 @@ export default class GoogleCal {
   /**
    * OAuth認証処理
    * @param {Object} credentials 認証データ
-   * @param {Object} config 設定
    * @return {Promise} object oAuth2Client.
    */
-  authorize(credentials: Credentials, config: Config) {
+  authorize(credentials: Credentials) {
     const {client_secret, client_id, redirect_uris} = credentials.web;
     const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris);
 
     return new Promise((resolve) => {
-      this.getToken(oAuth2Client, this.code).then(() => {
+      this.getToken(oAuth2Client).then(() => {
         resolve(oAuth2Client);
       })
     });
@@ -61,10 +54,10 @@ export default class GoogleCal {
    * @param oAuth2Client {object} google.auth.OAuth2の戻り値
    * @return (promise) object 有効なtokenを含めたgoogle.auth.OAuth2
    */
-  getToken(oAuth2Client: any, code: string) {
+  getToken(oAuth2Client: any) {
     return new Promise((resolve) => {
         // 指定されたコードのアクセストークンを取得
-        oAuth2Client.getToken(code, (err: any, token: string) => {
+        oAuth2Client.getToken(this.accessCode, (err: any, token: string) => {
           if (err) {
             functions.logger.info('Coud not get token.');
             functions.logger.error(err, {structuredData: true});
