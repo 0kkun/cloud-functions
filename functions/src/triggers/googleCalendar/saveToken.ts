@@ -6,14 +6,15 @@ import { db } from "../../lib/firebaseAdmin";
 
 type TokenInfo = {
   storeId: number,
+  roomId: number,
   accessToken: string,
   refreshToken: string,
   expiryDate: string,
   updatedAt: Date,
 }
 
-const collectionPath = (storeId: number): string => {
-  return `token/${storeId}`
+const collectionPath = (storeId: number, roomId: number): string => {
+  return `token/${storeId}/room/${roomId}`
 }
 
 const dateConvert = (expierDate: number): string => {
@@ -26,19 +27,20 @@ const dateConvert = (expierDate: number): string => {
  * @param storeId 
  * @param OAuth2Client 
  */
-const storeToken = async (storeId: number, OAuth2Client: any) => {
+const storeToken = async (storeId: number, roomId: number, OAuth2Client: any) => {
   const data: TokenInfo = {
     storeId: storeId,
     accessToken: OAuth2Client.credentials.access_token,
     refreshToken: OAuth2Client.credentials.refresh_token,
     expiryDate: dateConvert(OAuth2Client.credentials.expiry_date),
     updatedAt: new Date(),
+    roomId: roomId,
   }
-  await db.doc(collectionPath(storeId)).set(data);
+  await db.doc(collectionPath(storeId, roomId)).set(data);
 }
 
 /**
- * Google Auth2認証を行い、トークンを返すAPI
+ * Google Auth2認証を行い、トークンを保存するAPI
  * @request code
  * @return token
  */
@@ -46,12 +48,13 @@ export default tokyoFunctions().https.onRequest(async (req, res) => {
   // クエリパラメータの取得
   const code: string = String(req.query.code);
   const storeId: number = Number(req.query.storeId);
+  const roomId: number = Number(req.query.roomId);
 
   const googleCal = new GoogleCal(code);
   googleCal.connect().then((OAuth2Client: any) => {
     functions.logger.info('Google Cal Success.');
     functions.logger.info(OAuth2Client.credentials, {structuredData: true});
-    storeToken(storeId, OAuth2Client);
+    storeToken(storeId, roomId, OAuth2Client);
     res.status(200).send('success');
   })
   .catch(err => {
