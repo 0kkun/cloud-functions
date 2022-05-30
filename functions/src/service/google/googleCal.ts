@@ -11,9 +11,9 @@ import {google} from 'googleapis';
  * 3. 受け取ったコードを使ってアクセストークンとリフレッシュトークンを発行
  */
 export default class GoogleCal {
-  private accessCode: string;
+  private accessCode: string | undefined;
 
-  constructor(accessCode: string){
+  constructor(accessCode?: string | undefined){
     this.accessCode = accessCode;
   }
 
@@ -67,6 +67,29 @@ export default class GoogleCal {
           oAuth2Client.setCredentials(token);
           resolve(oAuth2Client);
         });
+    });
+  }
+
+  /**
+   * リフレッシュトークンを取得する
+   * @param refreshToken 
+   */
+  refreshAccessToken(refreshToken: string) {
+    const credentials: Credentials = {
+      web: functions.config().googlecredentialsweb,
+    };
+    const {client_secret, client_id, redirect_uris} = credentials.web;
+    const oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris);
+    oAuth2Client.credentials = {refresh_token: refreshToken};
+    return new Promise((resolve, reject) => {
+      oAuth2Client.refreshAccessToken((err, token: any) => {
+        if (err) {
+          functions.logger.info('リフレッシュトークンを取得できませんでした。');
+        }
+        functions.logger.info('リフレッシュトークンの取得完了');
+        oAuth2Client.setCredentials(token);
+        resolve(oAuth2Client);
+      });
     });
   }
 }

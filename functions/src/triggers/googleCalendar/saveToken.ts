@@ -50,6 +50,11 @@ export default tokyoFunctions().https.onRequest(async (req, res) => {
   const storeId: number = Number(req.query.storeId);
   const roomId: number = Number(req.query.roomId);
 
+  if (code === 'undefined' || isNaN(storeId) || isNaN(roomId)) {
+    functions.logger.info('リクエストが正しくありません。');
+    res.status(400).send('bad request. Must need [code=, storeId=, roomId=].');
+  }
+
   const googleCal = new GoogleCal(code);
   googleCal.connect().then((OAuth2Client: any) => {
     functions.logger.info('Google Cal Success.');
